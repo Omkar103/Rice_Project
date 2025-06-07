@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - RiceAI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/logo-white.jpg') }}" alt="RiceAI Logo">
+                <h3>RiceAI</h3>
+            </div>
+            <nav>
+                <ul>
+                    <li class="active"><a href="#"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="#detection"><i class="fas fa-camera"></i> Disease Detection</a></li>
+                    <li><a href="#history"><i class="fas fa-history"></i> Prediction History</a></li>
+                    <li><a href="#library"><i class="fas fa-book"></i> Disease Library</a></li>
+                    <li><a href="#chatbot"><i class="fas fa-robot"></i> Ask RiceAI</a></li>
+                    <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header>
+                <h1>Dashboard</h1>
+                <div class="user-profile">
+                    <img src="{{ url_for('static', filename='images/user-default.png') }}" alt="User">
+                    <span>Welcome, User!</span>
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <div class="stats-cards">
+                <div class="card">
+                    <div class="card-icon bg-primary">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>{{ total_predictions }}</h3>
+                        <p>Total Scans</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon bg-success">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>{{ disease_stats|length }}</h3>
+                        <p>Diseases Detected</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon bg-warning">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>{{ (history|selectattr('0', 'equalto', 'Healthy')|list|length) }}</h3>
+                        <p>Healthy Plants</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detection Section -->
+<section id="detection" class="section">
+    <h2><i class="fas fa-camera"></i> Detect Disease</h2>
+    <div class="detection-container">
+        <!-- Upload Box -->
+        <div class="upload-box" id="uploadBox">
+            <div class="upload-instructions">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Select or drag & drop rice leaf image</p>
+                <input type="file" id="imageUpload" accept="image/*">
+                <label for="imageUpload" class="btn btn-primary">Choose File</label>
+            </div>
+        </div>
+
+        <!-- Preview Box (initially hidden) -->
+        <div class="preview-box" id="previewBox" style="display: none;">
+            <div class="image-container">
+                <img id="imagePreview" src="#" alt="Selected Image">
+                <button class="btn-remove" id="btnRemoveImage">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <button id="btnAnalyze" class="btn btn-primary btn-analyze">
+                <i class="fas fa-search"></i> Analyze Image
+            </button>
+        </div>
+
+        <!-- Results Box (initially hidden) -->
+        <div class="results-box" id="resultsBox" style="display: none;">
+            <div class="spinner" id="spinner">
+                <div class="double-bounce1"></div>
+                <div class="double-bounce2"></div>
+            </div>
+            <div class="results-content" id="resultsContent">
+                <h3>Analysis Result</h3>
+                <div class="result-item">
+                    <h4>Disease:</h4>
+                    <p id="diseaseName">Unknown</p>
+                </div>
+                <div class="result-item">
+                    <h4>Confidence:</h4>
+                    <div class="confidence-meter">
+                        <div class="confidence-fill" id="confidenceFill"></div>
+                        <span id="confidenceValue">0%</span>
+                    </div>
+                </div>
+                <div class="result-item">
+                    <h4>Recommendation:</h4>
+                    <p id="recommendationText">No recommendation available</p>
+                </div>
+                <button class="btn btn-primary" id="btnNewAnalysis">
+                    <i class="fas fa-redo"></i> New Analysis
+                 </button>
+            </div>
+        </div>
+    </div>
+</section>
+            <!-- History Section -->
+            <section id="history" class="section">
+                <h2><i class="fas fa-history"></i> Recent Scans</h2>
+                <div class="history-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Disease</th>
+                                <th>Confidence</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in history %}
+                            <tr>
+                                <td>{{ item[2] }}</td>
+                                <td><span class="disease-tag {{ item[0].replace(' ', '-').lower() }}">{{ item[0] }}</span></td>
+                                <td>{{ "%.2f"|format(item[1] * 100) }}%</td>
+                                <td>
+                                    <button class="btn-icon view-details" data-disease="{{ item[0] }}" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <a href="#" class="btn-view-all">View All History</a>
+                </div>
+            </section>
+
+            <!-- Disease Library Section -->
+            <section id="library" class="section">
+                <h2><i class="fas fa-book"></i> Disease Library</h2>
+                <div class="disease-library">
+                    {% for disease, info in DISEASE_LIBRARY.items() %}
+                    <div class="disease-card" data-disease="{{ disease }}">
+                        <h3>{{ disease }}</h3>
+                        <button class="btn btn-small view-disease" data-disease="{{ disease }}">View Details</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Chatbot Section -->
+            <section id="chatbot" class="section">
+                <h2><i class="fas fa-robot"></i> RiceAI Assistant</h2>
+                <div class="chatbot-container">
+                    <div class="chatbot-header">
+                        <div class="chatbot-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="chatbot-info">
+                            <h4>RiceAI Assistant</h4>
+                            <p>Ask me anything about rice diseases</p>
+                        </div>
+                    </div>
+                    <div class="chatbot-messages" id="chatbotMessages">
+                        <div class="message bot-message">
+                            <p>Hello! I'm your RiceAI assistant. How can I help you with rice leaf diseases today?</p>
+                        </div>
+                    </div>
+                    <div class="chatbot-input">
+                        <input type="text" id="chatbotInput" placeholder="Type your question here...">
+                        <button id="btnSendMessage" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section">
+                <h2><i class="fas fa-cog"></i> Settings</h2>
+                <div class="settings-options">
+                    <div class="setting-item">
+                        <h3>Email Notifications</h3>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="email-notifications">
+                            <label for="email-notifications"></label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <h3>Dark Mode</h3>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="dark-mode">
+                            <label for="dark-mode"></label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <h3>Language</h3>
+                        <select class="language-select" id="language-select">
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Disease Info Modal -->
+    <div class="modal" id="diseaseModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="modalDiseaseName"></h2>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h3>Symptoms</h3>
+                    <p id="modalSymptoms"></p>
+                </div>
+                <div class="modal-section">
+                    <h3>Causes</h3>
+                    <p id="modalCauses"></p>
+                </div>
+                <div class="modal-section">
+                    <h3>Treatment</h3>
+                    <p id="modalTreatment"></p>
+                </div>
+                <div class="modal-section">
+                    <h3>Prevention</h3>
+                    <p id="modalPrevention"></p>
+                </div>
+                <div class="modal-images" id="modalImages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+</body>
+</html>

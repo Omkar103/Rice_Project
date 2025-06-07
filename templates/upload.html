@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Image - Rice Leaf Disease Classification</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <style>
+        body {
+            background-image: url('{{ url_for('static', filename='images/rice_leaf_image_1.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Upload an Image to Classify</h2>
+        <button onclick="handleLogout()" class="btn btn-logout">Logout</button>
+
+        <div class="upload-box">
+            <input type="file" id="image-upload" accept="image/*" onchange="previewImage(event)">
+            <button class="btn" onclick="classifyImage()">Classify Disease</button>
+            <div id="spinner" style="display:none;"></div>
+        </div>
+
+        <div id="prediction-result" style="display:none;">
+            <h3>Prediction Result:</h3>
+            <p id="disease-name">Disease: </p>
+            <p id="recommendation">Recommendation: </p>
+        </div>
+    </div>
+</body>
+
+</html>
