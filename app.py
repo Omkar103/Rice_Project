@@ -10,6 +10,8 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 
+port = int(os.environ.get("PORT", 5000))
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -532,4 +534,4 @@ def get_recommendation(disease):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000)
+    app.run(host='0.0.0.0', port=port)
